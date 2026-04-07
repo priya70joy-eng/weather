@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherApp — Subscribe for SMS Alerts</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F6FF;--card:#FFFFFF;--sky:#1565C0;--sky2:#1E88E5;--sky3:#42A5F5;
+  --accent:#F5A623;--green:#16A34A;--red:#DC2626;
+  --txt:#0F172A;--txt2:#475569;--txt3:#94A3B8;
+  --brd:#CBD5E1;--brd2:#93C5FD;--radius:12px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column}
+.hero{background:linear-gradient(135deg,#0D3B7A 0%,#1565C0 50%,#1976D2 100%);color:#fff;padding:40px 20px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.05)}
+.hero::after{content:'';position:absolute;bottom:-20px;left:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05)}
+.hero-icon{font-size:56px;display:block;margin-bottom:14px}
+.hero h1{font-size:26px;font-weight:700;margin-bottom:8px}
+.hero p{font-size:15px;opacity:.85;max-width:420px;margin:0 auto;line-height:1.6}
+.hero-chips{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:12px}
+.main{flex:1;max-width:480px;width:100%;margin:0 auto;padding:24px 16px}
+.card{background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--txt2);margin-bottom:20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--brd);border-radius:10px;font-family:'Syne',sans-serif;font-size:14px;color:var(--txt);background:#fff;transition:.15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(21,101,192,.1)}
+.field select option{font-family:'Syne',sans-serif}
+.captcha-box{background:#F8FAFF;border:1.5px solid var(--brd2);border-radius:10px;padding:14px;margin-bottom:14px}
+.captcha-title{font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.captcha-code{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:500;letter-spacing:8px;text-align:center;padding:12px;background:#fff;border:1.5px solid var(--brd);border-radius:8px;margin-bottom:10px;color:var(--sky);user-select:none;position:relative}
+.captcha-code span:nth-child(odd){display:inline-block;transform:rotate(-6deg) translateY(3px)}
+.captcha-code span:nth-child(even){display:inline-block;transform:rotate(5deg) translateY(-2px)}
+.captcha-code span:nth-child(3n){display:inline-block;transform:rotate(-2deg) translateY(1px);color:#0D47A1}
+.captcha-row{display:flex;gap:8px}
+.captcha-row input{flex:1;padding:10px 12px;border:1.5px solid var(--brd);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:3px;color:var(--txt)}
+.captcha-row input:focus{outline:none;border-color:var(--sky)}
+.cap-refresh{padding:10px 14px;background:#EFF6FF;border:1.5px solid var(--brd2);border-radius:8px;color:var(--sky);cursor:pointer;font-size:18px;transition:.15s}
+.cap-refresh:hover{background:var(--sky);color:#fff}
+.cap-note{font-size:11px;color:var(--txt3);margin-top:6px;text-align:center}
+.submit-btn{width:100%;padding:14px;background:var(--sky);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;margin-top:6px}
+.submit-btn:hover{background:var(--sky2);transform:translateY(-1px)}
+.submit-btn:active{transform:scale(.98)}
+.submit-btn:disabled{background:#94A3B8;cursor:not-allowed;transform:none}
+.error-msg{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:12px}
+.success-card{background:#F0FDF4;border:2px solid #86EFAC;border-radius:var(--radius);padding:28px;text-align:center;display:none}
+.success-card .tick{font-size:48px;display:block;margin-bottom:12px}
+.success-card h2{color:#15803D;font-size:20px;margin-bottom:8px}
+.success-card p{color:#166534;font-size:14px;line-height:1.6}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.feature{background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:14px;text-align:center}
+.feature .f-icon{font-size:24px;display:block;margin-bottom:6px}
+.feature .f-title{font-size:13px;font-weight:600;display:block}
+.feature .f-sub{font-size:11px;color:var(--txt2);margin-top:3px}
+.footer{text-align:center;padding:20px;font-size:12px;color:var(--txt3)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-icon">🌤️</span>
+  <h1>WeatherApp SMS Alerts</h1>
+  <p>Get hourly weather updates, storm warnings, and daily forecasts delivered directly to your phone — no internet needed.</p>
+  <div class="hero-chips">
+    <span class="chip">📱 Works on any phone</span>
+    <span class="chip">🆓 Free service</span>
+    <span class="chip">⚡ Real-time alerts</span>
+  </div>
+</div>
+
+<main class="main">
+
+  <div class="features">
+    <div class="feature"><span class="f-icon">☀️</span><span class="f-title">Hourly Updates</span><div class="f-sub">Temperature & sky every hour</div></div>
+    <div class="feature"><span class="f-icon">⛈️</span><span class="f-title">Storm Alerts</span><div class="f-sub">Instant severe weather SMS</div></div>
+    <div class="feature"><span class="f-icon">🌅</span><span class="f-title">Morning Digest</span><div class="f-sub">Full day forecast at 6 AM</div></div>
+    <div class="feature"><span class="f-icon">🌾</span><span class="f-title">Rural Friendly</span><div class="f-sub">No internet required</div></div>
+  </div>
+
+  <div class="card" id="reg-form">
+    <h2>Subscribe for Free</h2>
+    <div class="sub">Enter your details to start receiving weather SMS alerts</div>
+
+    <div id="err-box" class="error-msg" style="display:none"></div>
+
+    <div class="field">
+      <label>Full Name *</label>
+      <input type="text" id="r-name" placeholder="Your full name">
+    </div>
+    <div class="field">
+      <label>Mobile Number *</label>
+      <input type="tel" id="r-phone" placeholder="+91 98765 43210">
+    </div>
+    <div class="field">
+      <label>Email (optional)</label>
+      <input type="email" id="r-email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Your Area / Village</label>
+      <input type="text" id="r-location" placeholder="e.g. Midnapore, Hooghly, Bankura">
+    </div>
+
+    <div class="captcha-box">
+      <div class="captcha-title">Security Check — Type the code you see</div>
+      <div class="captcha-code" id="rc-display"></div>
+      <div class="captcha-row">
+        <input type="text" id="rc-input" placeholder="Enter the code" maxlength="6">
+        <button class="cap-refresh" onclick="refreshRegCap()" title="Get a new code">↺</button>
+      </div>
+      <div class="cap-note">Can't read it? Click ↺ for a new code</div>
+    </div>
+
+    <button class="submit-btn" id="reg-btn" onclick="doRegister()">Subscribe to Weather Alerts</button>
+  </div>
+
+  <div class="success-card" id="success-card">
+    <span class="tick">✅</span>
+    <h2>You're subscribed!</h2>
+    <p>Welcome to WeatherApp SMS Alerts.<br>You'll receive your first weather update within the hour.<br><br>To unsubscribe at any time, reply <strong>STOP</strong> to any SMS.</p>
+    <button class="submit-btn" style="margin-top:20px" onclick="resetForm()">Subscribe another number</button>
+  </div>
+
+  <div class="footer">WeatherApp • Free SMS weather service<br>Powered for rural communities across India</div>
+
+</main>
+
+<script>
+const API = 'http://localhost:3001/api';
+const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+let regCap='';
+
+function genCap(){let s='';for(let i=0;i<6;i++)s+=CHARS[Math.floor(Math.random()*CHARS.length)];return s;}
+function refreshRegCap(){regCap=genCap();const el=document.getElementById('rc-display');el.innerHTML=[...regCap].map(c=>`<span>${c}</span>`).join('');}
+refreshRegCap();
+
+async function doRegister(){
+  const name=document.getElementById('r-name').value.trim();
+  const phone=document.getElementById('r-phone').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const location=document.getElementById('r-location').value.trim();
+  const cap=document.getElementById('rc-input').value.trim().toUpperCase();
+  const err=document.getElementById('err-box');
+  const btn=document.getElementById('reg-btn');
+
+  err.style.display='none';
+
+  if(!name){showErr('Please enter your full name.');return;}
+  if(!phone){showErr('Please enter your mobile number.');return;}
+  if(phone.replace(/\D/g,'').length<10){showErr('Please enter a valid 10-digit mobile number.');return;}
+  if(cap!==regCap){showErr('Incorrect CAPTCHA code. Please try again.');refreshRegCap();document.getElementById('rc-input').value='';return;}
+
+  btn.textContent='Subscribing…';btn.disabled=true;
+
+  try{
+    const res=await fetch(API+'/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,phone,email,location})
+    });
+    const data=await res.json();
+    if(data.error){showErr(data.error);btn.textContent='Subscribe to Weather Alerts';btn.disabled=false;return;}
+    document.getElementById('reg-form').style.display='none';
+    document.getElementById('success-card').style.display='block';
+  }catch(e){
+    showErr('Could not connect to server. Please try again.');
+    btn.textContent='Subscribe to Weather Alerts';btn.disabled=false;
+  }
+}
+
+function showErr(msg){
+  const el=document.getElementById('err-box');
+  el.textContent=msg;el.style.display='block';
+}
+
+function resetForm(){
+  document.getElementById('reg-form').style.display='block';
+  document.getElementById('success-card').style.display='none';
+  document.getElementById('r-name').value='';
+  document.getElementById('r-phone').value='';
+  document.getElementById('r-email').value='';
+  document.getElementById('r-location').value='';
+  document.getElementById('rc-input').value='';
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('reg-btn').textContent='Subscribe to Weather Alerts';
+  document.getElementById('reg-btn').disabled=false;
+  refreshRegCap();
+}
+</script>
+</body>
+</html>

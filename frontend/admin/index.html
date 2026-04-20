@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherApp — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0B0F1A;--bg2:#111827;--bg3:#1A2235;--bg4:#1F2A40;
+  --sky:#1565C0;--sky2:#1E88E5;--sky3:#42A5F5;
+  --accent:#F5A623;--green:#22C55E;--red:#EF4444;--purple:#A78BFA;
+  --txt:#F1F5F9;--txt2:#94A3B8;--txt3:#64748B;
+  --brd:#1E2D45;--brd2:#2A3F60;
+  --radius:10px;--radius2:14px;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
+#login-screen.hidden{display:none}
+.login-card{width:380px;background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--radius2);padding:2.5rem}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo .icon{font-size:48px;display:block;margin-bottom:8px}
+.login-logo h1{font-size:22px;font-weight:700;color:var(--txt)}
+.login-logo p{font-size:13px;color:var(--txt2);margin-top:4px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:6px;font-weight:500}
+.login-field input{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--radius);color:var(--txt);font-family:'Syne',sans-serif;font-size:14px}
+.login-field input:focus{outline:none;border-color:var(--sky2)}
+.captcha-wrap{background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--radius);padding:12px;margin-bottom:14px}
+.captcha-code{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500;letter-spacing:8px;text-align:center;padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px;color:var(--accent);user-select:none}
+.captcha-code span:nth-child(odd){display:inline-block;transform:rotate(-5deg) translateY(2px)}
+.captcha-code span:nth-child(even){display:inline-block;transform:rotate(4deg) translateY(-2px)}
+.captcha-row{display:flex;gap:8px}
+.captcha-row input{flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--brd2);border-radius:8px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:14px}
+.captcha-row input:focus{outline:none;border-color:var(--sky2)}
+.cap-refresh{padding:9px 14px;background:var(--bg4);border:1px solid var(--brd2);border-radius:8px;color:var(--txt2);cursor:pointer;font-size:16px}
+.cap-refresh:hover{background:var(--brd2)}
+.login-btn{width:100%;padding:12px;background:var(--sky);border:none;border-radius:var(--radius);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.login-btn:hover{background:var(--sky2)}
+.login-btn:active{transform:scale(.98)}
+.login-error{font-size:12px;color:var(--red);margin-bottom:10px;min-height:16px;text-align:center}
+
+/* LAYOUT */
+#app-screen{display:flex;width:100%;min-height:100vh}
+#app-screen.hidden{display:none}
+.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--brd);display:flex;flex-direction:column;padding:0;flex-shrink:0}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--brd)}
+.sidebar-logo span{font-size:11px;color:var(--txt2);display:block}
+.sidebar-logo strong{font-size:16px;font-weight:700;color:var(--txt)}
+.sidebar-admin{padding:14px 16px;background:var(--bg3);margin:12px;border-radius:var(--radius);border:1px solid var(--brd)}
+.admin-avatar{width:34px;height:34px;border-radius:50%;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.admin-info{margin-left:10px}
+.admin-info strong{font-size:13px;display:block;color:var(--txt)}
+.admin-info span{font-size:11px;color:var(--txt2)}
+.nav-section{padding:8px 12px 4px;font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:.15s;color:var(--txt2);font-size:14px;margin:2px 8px;border-radius:8px}
+.nav-item:hover{background:var(--bg3);color:var(--txt)}
+.nav-item.active{background:var(--sky);color:#fff}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--accent);color:#000;border-radius:10px;font-size:10px;padding:2px 7px;font-weight:600}
+.sidebar-footer{margin-top:auto;padding:16px}
+.logout-btn{width:100%;padding:9px;background:transparent;border:1px solid var(--brd2);border-radius:8px;color:var(--txt2);font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;transition:.15s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto}
+.page{display:none;padding:28px}
+.page.active{display:block}
+.page-header{margin-bottom:24px}
+.page-header h2{font-size:22px;font-weight:700}
+.page-header p{font-size:13px;color:var(--txt2);margin-top:4px}
+
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius2);padding:18px}
+.stat-card .label{font-size:11px;color:var(--txt2);font-weight:500;margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:700;color:var(--txt)}
+.stat-card .sub{font-size:11px;color:var(--txt2);margin-top:4px}
+.stat-card.sky{border-color:var(--sky)}
+.stat-card.green{border-color:var(--green)}
+.stat-card.accent{border-color:var(--accent)}
+.stat-card.purple{border-color:var(--purple)}
+
+/* TABLE */
+.table-wrap{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius2);overflow:hidden}
+.table-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--brd)}
+.table-head h3{font-size:15px;font-weight:600}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:10px 16px;font-size:11px;color:var(--txt2);font-weight:500;background:var(--bg3);border-bottom:1px solid var(--brd)}
+.tbl td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--brd);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg3)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.badge.green{background:#14532D;color:#4ADE80}
+.badge.red{background:#450A0A;color:#FCA5A5}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--txt2)}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--sky);color:#fff}.btn-primary:hover{background:var(--sky2)}
+.btn-success{background:#15803D;color:#fff}.btn-success:hover{background:#16A34A}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-outline{background:transparent;color:var(--txt2);border:1px solid var(--brd2)}.btn-outline:hover{background:var(--bg3)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* FORM */
+.form-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius2);padding:22px;margin-bottom:20px}
+.form-card h3{font-size:15px;font-weight:600;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid.full{grid-template-columns:1fr}
+.field label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--brd2);border-radius:8px;color:var(--txt);font-family:'Syne',sans-serif;font-size:14px}
+.field input:focus,.field select,.field textarea:focus{outline:none;border-color:var(--sky2)}
+.field textarea{resize:vertical;min-height:90px}
+.field select{cursor:pointer}
+.field select option{background:var(--bg3)}
+.form-actions{display:flex;gap:10px;margin-top:16px}
+.msg-box{padding:10px 14px;border-radius:8px;font-size:13px;margin-top:10px}
+.msg-box.success{background:#14532D33;color:#4ADE80;border:1px solid #14532D}
+.msg-box.error{background:#450A0A33;color:#FCA5A5;border:1px solid #7F1D1D}
+
+/* BROADCAST */
+.broadcast-compose{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius2);padding:22px;margin-bottom:20px}
+.broadcast-compose h3{font-size:15px;font-weight:600;margin-bottom:8px}
+.broadcast-compose p{font-size:13px;color:var(--txt2);margin-bottom:16px}
+.char-count{font-size:11px;color:var(--txt2);text-align:right;margin-top:4px}
+.broadcast-options{display:flex;gap:10px;align-items:center;margin:14px 0}
+.toggle-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border:1px solid var(--brd2);border-radius:8px;font-size:13px;cursor:pointer}
+.toggle-chip input[type=checkbox]{width:16px;height:16px;cursor:pointer}
+.preview-box{background:var(--bg3);border:1px solid var(--brd2);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--txt2);margin-bottom:14px}
+.preview-box strong{color:var(--txt);display:block;margin-bottom:4px;font-size:11px}
+
+/* PROFILE */
+.profile-header{display:flex;gap:20px;align-items:center;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--radius2);padding:22px;margin-bottom:20px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0}
+.profile-info h3{font-size:18px;font-weight:700}
+.profile-info p{font-size:13px;color:var(--txt2);margin-top:2px}
+.profile-info .phone{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--sky3);margin-top:6px}
+
+/* TOGGLE */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--brd)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-lbl strong{font-size:14px;display:block}
+.toggle-lbl span{font-size:12px;color:var(--txt2);margin-top:2px;display:block}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--bg4);border:1px solid var(--brd2);cursor:pointer;position:relative;transition:.2s;flex-shrink:0}
+.toggle.on{background:var(--sky);border-color:var(--sky)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s}
+.toggle.on::after{left:22px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+
+/* RESPONSIVE */
+@media(max-width:700px){.sidebar{width:60px}.sidebar-logo,.admin-info,.nav-item span,.nav-section,.sidebar-footer{display:none}.nav-item{justify-content:center;padding:12px 0}.sidebar-admin{margin:8px;padding:8px}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="icon">🌤️</span>
+      <h1>WeatherApp Admin</h1>
+      <p>Sign in to your admin panel</p>
+    </div>
+    <div class="login-field">
+      <label>Email address</label>
+      <input type="email" id="l-email" value="admin@weather.app" placeholder="admin@weather.app">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="l-pwd" value="admin123" placeholder="••••••••">
+    </div>
+    <div class="captcha-wrap">
+      <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">Enter the CAPTCHA code to continue</div>
+      <div class="captcha-code" id="cap-display"></div>
+      <div class="captcha-row">
+        <input type="text" id="cap-input" placeholder="Type the code above" maxlength="6">
+        <button class="cap-refresh" onclick="refreshCap()" title="Refresh">↺</button>
+      </div>
+    </div>
+    <div class="login-error" id="l-error"></div>
+    <button class="login-btn" onclick="doLogin()">Sign In to Admin Panel</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="hidden">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>Control Panel</span>
+      <strong>🌤️ WeatherApp</strong>
+    </div>
+    <div class="sidebar-admin" style="display:flex;align-items:center">
+      <div class="admin-avatar" id="s-avatar">A</div>
+      <div class="admin-info">
+        <strong id="s-name">Admin</strong>
+        <span id="s-email">admin@weather.app</span>
+      </div>
+    </div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="goPage('dashboard')"><span class="icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="goPage('broadcast')"><span class="icon">📡</span><span>Broadcast SMS</span></div>
+    <div class="nav-section">People</div>
+    <div class="nav-item" onclick="goPage('consumers')"><span class="icon">👥</span><span>Consumers</span><span class="nav-badge" id="nb-consumers">0</span></div>
+    <div class="nav-section">Config</div>
+    <div class="nav-item" onclick="goPage('profile')"><span class="icon">👤</span><span>My Profile</span></div>
+    <div class="nav-item" onclick="goPage('settings')"><span class="icon">⚙️</span><span>Settings</span></div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p id="dash-greeting">Good day, Admin</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card sky"><div class="label">Total Consumers</div><div class="value" id="st-total">—</div><div class="sub">registered numbers</div></div>
+        <div class="stat-card green"><div class="label">Active Subscribers</div><div class="value" id="st-active">—</div><div class="sub">receiving SMS</div></div>
+        <div class="stat-card accent"><div class="label">Total Broadcasts</div><div class="value" id="st-broadcasts">—</div><div class="sub">messages sent</div></div>
+        <div class="stat-card purple"><div class="label">Last Broadcast</div><div class="value" style="font-size:14px;margin-top:4px" id="st-last">—</div><div class="sub">most recent send</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="table-wrap">
+          <div class="table-head"><h3>Recent Broadcasts</h3></div>
+          <table class="tbl"><thead><tr><th>Message</th><th>Sent To</th><th>Date</th></tr></thead><tbody id="dash-broadcasts"></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head"><h3>Recent Consumers</h3></div>
+          <table class="tbl"><thead><tr><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody id="dash-consumers"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="page" id="page-broadcast">
+      <div class="page-header"><h2>Broadcast SMS</h2><p>Write a weather update and send it to all active consumers</p></div>
+      <div class="broadcast-compose">
+        <h3>Compose Weather Update</h3>
+        <p>This message will be sent via SMS to all active subscriber numbers</p>
+        <div class="field form-grid full">
+          <label>Weather update message</label>
+          <textarea id="bc-message" placeholder="e.g. Today in Kolkata: 34°C, Partly cloudy. Evening showers expected 5–8 PM. Humidity 72%. Stay hydrated!" oninput="updatePreview()"></textarea>
+          <div class="char-count"><span id="char-count">0</span> / 160 chars (1 SMS)</div>
+        </div>
+        <div class="preview-box">
+          <strong>SMS Preview:</strong>
+          <span id="bc-preview">Your message will appear here…</span>
+        </div>
+        <div class="broadcast-options">
+          <label class="toggle-chip"><input type="checkbox" id="bc-all" checked> Send to all active consumers</label>
+          <label class="toggle-chip"><input type="checkbox" id="bc-prepend" checked> Prepend "🌤 WeatherApp:"</label>
+        </div>
+        <div id="bc-msg"></div>
+        <div class="btn-row">
+          <button class="btn btn-success" onclick="sendBroadcast()">📡 Send to all subscribers</button>
+          <button class="btn btn-outline" onclick="document.getElementById('bc-message').value='';updatePreview()">Clear</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3>Broadcast History</h3><button class="btn btn-outline btn-sm" onclick="loadBroadcasts()">Refresh</button></div>
+        <table class="tbl"><thead><tr><th>Message</th><th>Sent By</th><th>Delivered To</th><th>Date</th></tr></thead><tbody id="bc-history"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CONSUMERS -->
+    <div class="page" id="page-consumers">
+      <div class="page-header"><h2>Consumers</h2><p>Manage phone numbers that receive weather SMS alerts</p></div>
+      <div class="form-card">
+        <h3>Add New Consumer</h3>
+        <div class="form-grid">
+          <div class="field"><label>Full Name *</label><input type="text" id="c-name" placeholder="Ramesh Kumar"></div>
+          <div class="field"><label>Phone Number *</label><input type="tel" id="c-phone" placeholder="+91 98765 43210"></div>
+          <div class="field"><label>Email (optional)</label><input type="email" id="c-email" placeholder="ramesh@email.com"></div>
+          <div class="field"><label>Location / Area</label><input type="text" id="c-location" placeholder="Midnapore, WB"></div>
+        </div>
+        <div id="c-msg"></div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addConsumer()">Add Consumer</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>All Consumers</h3>
+          <div class="btn-row">
+            <button class="btn btn-outline btn-sm" onclick="exportConsumers()">Export CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="loadConsumers()">Refresh</button>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Location</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="consumers-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="page-header"><h2>My Profile</h2><p>Update your admin details and broadcast number</p></div>
+      <div class="profile-header">
+        <div class="profile-avatar" id="p-avatar">A</div>
+        <div class="profile-info">
+          <h3 id="p-name">Admin</h3>
+          <p id="p-email">admin@weather.app</p>
+          <div class="phone" id="p-phone">Phone not set</div>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>Update Profile</h3>
+        <div class="form-grid">
+          <div class="field"><label>Full Name</label><input type="text" id="pf-name" placeholder="Your name"></div>
+          <div class="field"><label>Admin Phone (broadcast number)</label><input type="tel" id="pf-phone" placeholder="+91 98765 43210"></div>
+        </div>
+        <div id="pf-msg"></div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="saveProfile()">Save Changes</button></div>
+      </div>
+      <div class="form-card">
+        <h3>Change Password</h3>
+        <div class="form-grid">
+          <div class="field"><label>Current Password</label><input type="password" id="pw-cur" placeholder="••••••••"></div>
+          <div class="field"><label>New Password</label><input type="password" id="pw-new" placeholder="Min 6 characters"></div>
+        </div>
+        <div id="pw-msg"></div>
+        <div class="form-actions"><button class="btn btn-outline" onclick="changePassword()">Update Password</button></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><h2>Settings</h2><p>Configure SMS and broadcast preferences</p></div>
+      <div class="form-card">
+        <h3>SMS Toggles</h3>
+        <div>
+          <div class="toggle-row"><div class="toggle-lbl"><strong>Hourly Auto-Broadcast</strong><span>Automatically send weather every hour to all subscribers</span></div><button class="toggle on" id="t-hourly" onclick="this.classList.toggle('on');saveSetting('hourly_auto',this.classList.contains('on'))"></button></div>
+          <div class="toggle-row"><div class="toggle-lbl"><strong>Severe Weather Alerts</strong><span>Immediate SMS when storm or flood warning is issued</span></div><button class="toggle on" id="t-severe" onclick="this.classList.toggle('on');saveSetting('severe_alerts',this.classList.contains('on'))"></button></div>
+          <div class="toggle-row"><div class="toggle-lbl"><strong>Morning Digest (6 AM)</strong><span>Daily morning summary for all subscribers</span></div><button class="toggle" id="t-morning" onclick="this.classList.toggle('on');saveSetting('morning_digest',this.classList.contains('on'))"></button></div>
+          <div class="toggle-row"><div class="toggle-lbl"><strong>Evening Summary (7 PM)</strong><span>Daily evening weather recap</span></div><button class="toggle" id="t-evening" onclick="this.classList.toggle('on');saveSetting('evening_summary',this.classList.contains('on'))"></button></div>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>Twilio SMS Configuration</h3>
+        <div class="form-grid">
+          <div class="field"><label>Twilio Account SID</label><input type="text" id="tw-sid" placeholder="ACxxxxxxxxxxxxxxxx"></div>
+          <div class="field"><label>Twilio Auth Token</label><input type="password" id="tw-token" placeholder="your_auth_token"></div>
+          <div class="field"><label>Twilio From Number</label><input type="tel" id="tw-from" placeholder="+1234567890"></div>
+          <div class="field"><label>OpenWeatherMap API Key</label><input type="text" id="ow-key" placeholder="your_api_key"></div>
+        </div>
+        <div id="st-msg"></div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="saveSettings()">Save Settings</button></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = 'http://localhost:3001/api';
+let token = localStorage.getItem('wx_admin_token') || '';
+let adminData = {};
+const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+let captchaCode = '';
+
+function genCap(){let s='';for(let i=0;i<6;i++)s+=CHARS[Math.floor(Math.random()*CHARS.length)];return s;}
+function refreshCap(){captchaCode=genCap();const el=document.getElementById('cap-display');el.innerHTML=[...captchaCode].map(c=>`<span>${c}</span>`).join('');}
+refreshCap();
+
+async function apiCall(method,path,body){
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  return r.json();
+}
+
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pwd=document.getElementById('l-pwd').value;
+  const cap=document.getElementById('cap-input').value.trim().toUpperCase();
+  const err=document.getElementById('l-error');
+  if(cap!==captchaCode){err.textContent='Incorrect CAPTCHA. Please try again.';refreshCap();document.getElementById('cap-input').value='';return;}
+  const res=await apiCall('POST','/admin/login',{email,password:pwd});
+  if(res.error){err.textContent=res.error;refreshCap();document.getElementById('cap-input').value='';return;}
+  token=res.token;localStorage.setItem('wx_admin_token',token);
+  adminData=res.admin;
+  showApp();
+}
+
+function showApp(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.remove('hidden');
+  const n=adminData.name||'Admin';
+  document.getElementById('s-name').textContent=n;
+  document.getElementById('s-email').textContent=adminData.email||'';
+  document.getElementById('s-avatar').textContent=n[0].toUpperCase();
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':'h<17?Good afternoon':'Good evening';
+  document.getElementById('dash-greeting').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+n;
+  loadDashboard();loadProfile();loadSettings();
+}
+
+function doLogout(){token='';localStorage.removeItem('wx_admin_token');document.getElementById('login-screen').classList.remove('hidden');document.getElementById('app-screen').classList.add('hidden');refreshCap();}
+
+function goPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(x=>{if(x.getAttribute('onclick').includes(p))x.classList.add('active')});
+  if(p==='consumers')loadConsumers();
+  if(p==='broadcast'){loadBroadcasts();}
+}
+
+async function loadDashboard(){
+  const s=await apiCall('GET','/stats');
+  document.getElementById('st-total').textContent=s.totalConsumers||0;
+  document.getElementById('st-active').textContent=s.activeConsumers||0;
+  document.getElementById('st-broadcasts').textContent=s.totalBroadcasts||0;
+  document.getElementById('st-last').textContent=s.lastBroadcast||'Never';
+  document.getElementById('nb-consumers').textContent=s.totalConsumers||0;
+  const br=await apiCall('GET','/broadcasts');
+  document.getElementById('dash-broadcasts').innerHTML=(br||[]).slice(0,5).map(b=>`<tr><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.message}</td><td>${b.sent_to}</td><td class="mono">${b.created.slice(0,16)}</td></tr>`).join('');
+  const cs=await apiCall('GET','/consumers');
+  document.getElementById('dash-consumers').innerHTML=(cs||[]).slice(0,5).map(c=>`<tr><td>${c.name}</td><td class="mono">${c.phone}</td><td><span class="badge ${c.active?'green':'red'}">${c.active?'Active':'Paused'}</span></td></tr>`).join('');
+}
+
+async function loadConsumers(){
+  const cs=await apiCall('GET','/consumers');
+  document.getElementById('consumers-list').innerHTML=(cs||[]).map(c=>`
+    <tr>
+      <td>${c.name}</td>
+      <td class="mono">${c.phone}</td>
+      <td>${c.email||'—'}</td>
+      <td>${c.location||'—'}</td>
+      <td><span class="badge ${c.active?'green':'red'}">${c.active?'Active':'Paused'}</span></td>
+      <td class="mono" style="font-size:11px">${(c.created||'').slice(0,10)}</td>
+      <td>
+        <div class="btn-row">
+          <button class="btn btn-outline btn-sm" onclick="toggleConsumer(${c.id},${c.active})">${c.active?'Pause':'Resume'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteConsumer(${c.id})">Del</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('nb-consumers').textContent=(cs||[]).length;
+}
+
+async function addConsumer(){
+  const name=document.getElementById('c-name').value.trim();
+  const phone=document.getElementById('c-phone').value.trim();
+  const email=document.getElementById('c-email').value.trim();
+  const location=document.getElementById('c-location').value.trim();
+  const msgEl=document.getElementById('c-msg');
+  if(!name||!phone){msgEl.innerHTML='<div class="msg-box error">Name and phone are required.</div>';return;}
+  const res=await apiCall('POST','/consumers',{name,phone,email,location});
+  if(res.error){msgEl.innerHTML=`<div class="msg-box error">${res.error}</div>`;return;}
+  msgEl.innerHTML='<div class="msg-box success">Consumer added successfully!</div>';
+  document.getElementById('c-name').value='';document.getElementById('c-phone').value='';
+  document.getElementById('c-email').value='';document.getElementById('c-location').value='';
+  loadConsumers();setTimeout(()=>msgEl.innerHTML='',3000);
+}
+
+async function toggleConsumer(id,active){
+  const cs=await apiCall('GET','/consumers');
+  const c=cs.find(x=>x.id===id);
+  if(!c)return;
+  await apiCall('PUT','/consumers/'+id,{...c,active:active?0:1});
+  loadConsumers();
+}
+
+async function deleteConsumer(id){
+  if(!confirm('Delete this consumer?'))return;
+  await apiCall('DELETE','/consumers/'+id);
+  loadConsumers();loadDashboard();
+}
+
+async function exportConsumers(){
+  window.open(API+'/consumers/export?token='+token);
+}
+
+function updatePreview(){
+  const msg=document.getElementById('bc-message').value;
+  const prepend=document.getElementById('bc-prepend').checked;
+  const full=(prepend?'🌤 WeatherApp: ':'')+msg;
+  document.getElementById('bc-preview').textContent=full||'Your message will appear here…';
+  const cnt=full.length;
+  document.getElementById('char-count').textContent=cnt;
+  document.getElementById('char-count').style.color=cnt>160?'var(--red)':'var(--txt2)';
+}
+
+async function sendBroadcast(){
+  const message=document.getElementById('bc-message').value.trim();
+  const msgEl=document.getElementById('bc-msg');
+  if(!message){msgEl.innerHTML='<div class="msg-box error">Please write a message first.</div>';return;}
+  msgEl.innerHTML='<div class="msg-box">Sending SMS to all active subscribers…</div>';
+  const res=await apiCall('POST','/broadcast',{message});
+  if(res.error){msgEl.innerHTML=`<div class="msg-box error">${res.error}</div>`;return;}
+  msgEl.innerHTML=`<div class="msg-box success">Sent to ${res.sentCount} of ${res.total} subscribers successfully!</div>`;
+  document.getElementById('bc-message').value='';updatePreview();
+  loadBroadcasts();loadDashboard();
+}
+
+async function loadBroadcasts(){
+  const br=await apiCall('GET','/broadcasts');
+  document.getElementById('bc-history').innerHTML=(br||[]).map(b=>`
+    <tr><td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.message}</td>
+    <td>${b.sent_by}</td><td><span class="badge green">${b.sent_to} numbers</span></td>
+    <td class="mono">${(b.created||'').slice(0,16)}</td></tr>`).join('');
+}
+
+async function loadProfile(){
+  const p=await apiCall('GET','/admin/profile');
+  adminData=p;
+  document.getElementById('p-name').textContent=p.name;
+  document.getElementById('p-email').textContent=p.email;
+  document.getElementById('p-phone').textContent=p.phone||'Phone not set';
+  document.getElementById('p-avatar').textContent=p.name[0].toUpperCase();
+  document.getElementById('pf-name').value=p.name;
+  document.getElementById('pf-phone').value=p.phone||'';
+  document.getElementById('s-name').textContent=p.name;
+  document.getElementById('s-avatar').textContent=p.name[0].toUpperCase();
+}
+
+async function saveProfile(){
+  const name=document.getElementById('pf-name').value.trim();
+  const phone=document.getElementById('pf-phone').value.trim();
+  const res=await apiCall('PUT','/admin/profile',{name,phone});
+  const msg=document.getElementById('pf-msg');
+  if(res.error){msg.innerHTML=`<div class="msg-box error">${res.error}</div>`;return;}
+  msg.innerHTML='<div class="msg-box success">Profile updated!</div>';
+  loadProfile();setTimeout(()=>msg.innerHTML='',3000);
+}
+
+async function changePassword(){
+  const current=document.getElementById('pw-cur').value;
+  const newPassword=document.getElementById('pw-new').value;
+  const msg=document.getElementById('pw-msg');
+  if(newPassword.length<6){msg.innerHTML='<div class="msg-box error">New password must be at least 6 characters.</div>';return;}
+  const res=await apiCall('PUT','/admin/password',{current,newPassword});
+  if(res.error){msg.innerHTML=`<div class="msg-box error">${res.error}</div>`;return;}
+  msg.innerHTML='<div class="msg-box success">Password changed!</div>';
+  document.getElementById('pw-cur').value='';document.getElementById('pw-new').value='';
+  setTimeout(()=>msg.innerHTML='',3000);
+}
+
+async function loadSettings(){
+  const s=await apiCall('GET','/settings');
+  if(s.hourly_auto==='false')document.getElementById('t-hourly').classList.remove('on');
+  if(s.severe_alerts==='false')document.getElementById('t-severe').classList.remove('on');
+  if(s.morning_digest==='true')document.getElementById('t-morning').classList.add('on');
+  if(s.evening_summary==='true')document.getElementById('t-evening').classList.add('on');
+  if(s.twilio_sid)document.getElementById('tw-sid').value=s.twilio_sid;
+  if(s.twilio_token)document.getElementById('tw-token').value=s.twilio_token;
+  if(s.twilio_from)document.getElementById('tw-from').value=s.twilio_from;
+  if(s.openweather_key)document.getElementById('ow-key').value=s.openweather_key;
+}
+
+async function saveSetting(key,val){
+  await apiCall('PUT','/settings',{[key]:val});
+}
+
+async function saveSettings(){
+  const data={
+    twilio_sid:document.getElementById('tw-sid').value,
+    twilio_token:document.getElementById('tw-token').value,
+    twilio_from:document.getElementById('tw-from').value,
+    openweather_key:document.getElementById('ow-key').value
+  };
+  const res=await apiCall('PUT','/settings',data);
+  const msg=document.getElementById('st-msg');
+  msg.innerHTML='<div class="msg-box success">Settings saved!</div>';
+  setTimeout(()=>msg.innerHTML='',3000);
+}
+
+if(token){
+  apiCall('GET','/admin/profile').then(p=>{
+    if(p.error){token='';localStorage.removeItem('wx_admin_token');return;}
+    adminData=p;showApp();
+  });
+}
+</script>
+</body>
+</html>

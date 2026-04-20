@@ -1,195 +1,145 @@
-===================================================
-  WeatherApp — Complete Setup Guide
-  Hourly Weather SMS Broadcast System
-===================================================
+# WeatherApp - Hourly Weather SMS Broadcast System
 
-📁 FOLDER STRUCTURE (save this folder to D:\WeatherApp)
---------------------------------------------------------
+A complete weather alert system that sends SMS updates to subscribers via Twilio. Includes an admin panel for managing consumers and broadcasting weather updates.
+
+---
+
+## 📁 Folder Structure
+
+```
 WeatherApp/
 ├── backend/
-│   ├── server.js          ← Main backend server
-│   └── package.json       ← Node.js dependencies
+│   ├── server.js          # Main backend server
+│   └── package.json       # Node.js dependencies
 ├── frontend/
 │   ├── admin/
-│   │   └── index.html     ← Admin Panel (your control panel)
+│   │   └── index.html     # Admin Panel
 │   └── user/
-│       └── index.html     ← Consumer Registration Portal
+│       └── index.html     # Consumer Registration Portal
 ├── data/
-│   └── weather.db         ← Auto-created SQLite database
-└── README.txt             ← This file
+│   └── weather.db         # SQLite database (auto-created)
+├── START_SERVER.bat       # Windows batch file to start server
+└── README.md              # This file
+```
 
+---
 
-===================================================
-  STEP 1 — INSTALL NODE.JS
-===================================================
-1. Go to: https://nodejs.org
-2. Download and install Node.js LTS (v20 or later)
-3. After install, open Command Prompt (Win+R → type "cmd")
-4. Type:  node --version
-   You should see something like:  v20.x.x
+## 🚀 Quick Start
 
+### Step 1: Install Node.js
+- Download from https://nodejs.org (LTS version v20 or later)
+- Verify: Run `node --version` in terminal/command prompt
 
-===================================================
-  STEP 2 — INSTALL DEPENDENCIES
-===================================================
-1. Open Command Prompt
-2. Navigate to backend folder:
-     cd D:\WeatherApp\backend
-3. Run:
-     npm install
-4. Wait for all packages to install (takes ~1 minute)
+### Step 2: Install Dependencies
 
+```bash
+# Navigate to backend folder
+cd WeatherApp/backend
 
-===================================================
-  STEP 3 — SET UP TWILIO (for real SMS)
-===================================================
-1. Go to: https://www.twilio.com and create a free account
-2. From your Twilio Dashboard, copy:
-   - Account SID  (starts with AC...)
-   - Auth Token
-   - Your Twilio phone number
+# Install dependencies
+npm install
 
-3. Edit D:\WeatherApp\backend\server.js
-   Find these lines near the top and fill in your details:
-     const TWILIO_SID   = 'ACxxxxxxxxxxxxxxxx';
-     const TWILIO_TOKEN = 'your_auth_token';
-     const TWILIO_FROM  = '+1234567890';
+# Create environment file (copy from example)
+cp .env.example .env
+```
 
-   OR create a .env file in the backend folder:
-     TWILIO_SID=ACxxxxxxxxxxxxxxxx
-     TWILIO_TOKEN=your_auth_token
-     TWILIO_FROM=+1234567890
+### Step 3: Configure Twilio (for SMS)
 
-   NOTE: For Indian numbers (Vodafone/Airtel/Jio), use the
-   +91XXXXXXXXXX format for consumer phone numbers.
+Edit the `.env` file in the `backend` folder with your Twilio credentials:
 
+```env
+TWILIO_SID=ACxxxxxxxxxxxxxxxx
+TWILIO_TOKEN=your_auth_token
+TWILIO_FROM=+1234567890
+```
 
-===================================================
-  STEP 4 — START THE SERVER
-===================================================
-1. Open Command Prompt
-2. Run:
-     cd D:\WeatherApp\backend
-     node server.js
+Get free credentials from https://www.twilio.com
 
-3. You should see:
-     🌤  WeatherApp Server running at http://localhost:3001
-        Admin panel : http://localhost:3001/admin
-        User portal : http://localhost:3001/user
+### Step 4: Start the Server
 
-4. Keep this window open! (Server stops if you close it)
+```bash
+# From backend folder
+node server.js
+```
 
-   TIP: To auto-start on boot:
-     npm install -g pm2
-     pm2 start server.js
-     pm2 startup
+Or use the startup scripts:
+- **Windows:** Double-click `START_SERVER.bat`
+- **Linux/Mac:** Run `bash START_SERVER.sh`
 
+### Step 5: Access the App
 
-===================================================
-  STEP 5 — ACCESS THE PANELS
-===================================================
+Open your browser:
+- **Admin Panel:** http://localhost:3001/admin
+- **User Portal:** http://localhost:3001/user
 
-ADMIN PANEL (Your Control Panel):
-  URL:      http://localhost:3001/admin
-  Email:    admin@weather.app
-  Password: admin123
+---
 
-  What you can do:
-  ✅ Add your own phone number (My Profile)
-  ✅ Add consumer numbers manually
-  ✅ Write weather updates and broadcast to all
-  ✅ Toggle hourly/morning/severe alert SMS on/off
-  ✅ View all consumers and broadcast history
-  ✅ Export consumer list as Excel/CSV
+## ⚡ Quick Commands Reference
 
-CONSUMER REGISTRATION PORTAL:
-  URL:      http://localhost:3001/user
-  Share this link so people can register themselves!
-  Their numbers auto-appear in your Admin → Consumers list.
+```bash
+# Install dependencies
+cd backend && npm install
 
+# Start server
+cd backend && node server.js
 
-===================================================
-  STEP 6 — CHANGE YOUR ADMIN PASSWORD
-===================================================
-1. Log in to Admin Panel
-2. Click "My Profile" in sidebar
-3. Enter current password: admin123
-4. Set your new strong password
-5. Save!
+# Or use scripts
+./START_SERVER.sh    # Linux/Mac
+START_SERVER.bat     # Windows
+```
 
+---
 
-===================================================
-  HOW TO SEND A WEATHER UPDATE
-===================================================
-1. Log in to Admin Panel → http://localhost:3001/admin
-2. Click "Broadcast SMS" in sidebar
-3. Type your weather update message, e.g.:
-   "Today in Kolkata: 34°C, partly cloudy, evening rain 5-8 PM. Humidity 72%. Stay hydrated!"
+## 🔐 Default Login
+
+- **Email:** admin@weather.app
+- **Password:** admin123
+
+> ⚠️ Change your password immediately after first login!
+
+---
+
+## 📖 How to Use
+
+### Sending Weather Updates
+1. Login to Admin Panel
+2. Go to "Broadcast SMS"
+3. Type your weather message
 4. Click "Send to all subscribers"
-5. SMS goes to ALL active consumer numbers via Twilio
 
+### Managing Consumers
+- **Add manually:** Admin Panel → Consumers → Add New Consumer
+- **User self-register:** Share the User Portal URL
 
-===================================================
-  HOW CONSUMERS REGISTER
-===================================================
-Option A — They register themselves:
-  1. Share the URL: http://localhost:3001/user
-  2. They fill name, phone, area + CAPTCHA
-  3. They appear instantly in your Admin → Consumers list
+### Export Data
+Admin Panel → Consumers → Export CSV
 
-Option B — You add them manually:
-  1. Admin Panel → Consumers
-  2. Fill the "Add New Consumer" form
-  3. Click "Add Consumer"
+---
 
+## 🔧 Troubleshooting
 
-===================================================
-  EXPORT TO EXCEL
-===================================================
-1. Admin Panel → Consumers
-2. Click "Export CSV" button
-3. Open the downloaded file in Microsoft Excel
-4. All consumer data: Name, Phone, Email, Location, Status
+| Error | Solution |
+|-------|----------|
+| "Cannot find module 'better-sqlite3'" | Run `npm install` in backend folder |
+| "Port 3001 already in use" | Change PORT in server.js to 3002 |
+| SMS not sending | Verify Twilio credentials and account balance |
+| "Cannot connect" | Make sure server is running (`node server.js`) |
 
+### For Indian Phone Numbers
+Use format: +91XXXXXXXXXX (10 digits after +91)
 
-===================================================
-  TROUBLESHOOTING
-===================================================
+---
 
-Error: "Cannot find module 'better-sqlite3'"
-→ Run: npm install  (in the backend folder)
+## 🛠️ Tech Stack
 
-Error: "Port 3001 already in use"
-→ Change PORT=3001 to PORT=3002 in server.js
+- **Backend:** Node.js + Express
+- **Database:** SQLite (better-sqlite3)
+- **SMS:** Twilio API
+- **Auth:** JWT + bcrypt
+- **Frontend:** Pure HTML + CSS + JavaScript
 
-SMS not sending?
-→ Check your Twilio credentials in server.js
-→ Make sure Twilio account is funded (₹ or $)
-→ For Indian numbers: format must be +91XXXXXXXXXX
+---
 
-Admin panel shows "Cannot connect"?
-→ Make sure server.js is running (node server.js)
-→ Check http://localhost:3001 in browser
+## 📄 License
 
-
-===================================================
-  TECH STACK SUMMARY
-===================================================
-Backend:   Node.js + Express
-Database:  SQLite (file: data/weather.db)
-SMS:       Twilio API
-Auth:      JWT tokens + bcrypt password hashing
-Security:  CAPTCHA on all login/register forms
-Frontend:  Pure HTML + CSS + JS (no framework)
-
-
-===================================================
-  SUPPORT
-===================================================
-Default Admin Login:
-  Email:    admin@weather.app
-  Password: admin123  ← CHANGE THIS IMMEDIATELY!
-
-For Twilio help: https://www.twilio.com/docs/sms
-For Node.js help: https://nodejs.org/docs
-===================================================
+MIT License

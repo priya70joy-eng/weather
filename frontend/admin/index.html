@@ -368,7 +368,7 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--txt);min-hei
 </div>
 
 <script>
-const API = 'http://localhost:3001/api';
+const API = window.location.origin + '/api';
 let token = localStorage.getItem('wx_admin_token') || '';
 let adminData = {};
 const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -406,7 +406,7 @@ function showApp(){
   document.getElementById('s-email').textContent=adminData.email||'';
   document.getElementById('s-avatar').textContent=n[0].toUpperCase();
   const h=new Date().getHours();
-  const g=h<12?'Good morning':'h<17?Good afternoon':'Good evening';
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   document.getElementById('dash-greeting').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+n;
   loadDashboard();loadProfile();loadSettings();
 }

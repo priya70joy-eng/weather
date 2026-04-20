@@ -12,12 +12,20 @@ const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const path       = require('path');
 const fs         = require('fs');
+const dotenv     = require('dotenv');
+
+dotenv.config();
 
 // ── Config ──────────────────────────────────────────────────
-const PORT       = 3001;
+const PORT       = process.env.PORT || 3001;
 const JWT_SECRET = 'weatherapp_secret_change_in_production';
-const DB_PATH    = path.join(__dirname, '../data/weather.db');
-const SETTINGS_PATH = path.join(__dirname, '../data/settings.json');
+const DATA_DIR   = path.join(__dirname, '../data');
+const DB_PATH    = path.join(DATA_DIR, 'weather.db');
+const SETTINGS_PATH = path.join(DATA_DIR, 'settings.json');
+
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 // ── Twilio (fill in your credentials in .env or here) ───────
 const TWILIO_SID   = process.env.TWILIO_SID   || 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
@@ -80,6 +88,13 @@ if (adminCount.c === 0) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token' });
@@ -109,6 +124,14 @@ app.use(bodyParser.json());
 // Serve frontend files
 app.use('/admin', express.static(path.join(__dirname, '../frontend/admin')));
 app.use('/user',  express.static(path.join(__dirname, '../frontend/user')));
+
+// Serve index.html for /admin and /user routes
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/admin/index.html'));
+});
+app.get('/user', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/user/index.html'));
+});
 app.get('/', (req, res) => res.redirect('/admin'));
 
 // ── AUTH ─────────────────────────────────────────────────────
@@ -173,8 +196,12 @@ app.delete('/api/consumers/:id', authMiddleware, (req, res) => {
 
 app.get('/api/consumers/export', authMiddleware, (req, res) => {
   const rows = db.prepare('SELECT * FROM consumers ORDER BY created DESC').all();
+  const escapeCSV = (str) => {
+    if (!str) return '';
+    return '"' + String(str).replace(/"/g, '""') + '"';
+  };
   const csv = ['ID,Name,Phone,Email,Location,Active,Joined',
-    ...rows.map(r => `${r.id},"${r.name}","${r.phone}","${r.email}","${r.location}",${r.active ? 'Yes':'No'},"${r.created}"`)
+    ...rows.map(r => `${r.id},${escapeCSV(r.name)},${escapeCSV(r.phone)},${escapeCSV(r.email)},${escapeCSV(r.location)},${r.active ? 'Yes':'No'},${escapeCSV(r.created)}`)
   ].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="consumers.csv"');
@@ -197,7 +224,7 @@ app.post('/api/broadcast', authMiddleware, async (req, res) => {
   }
 
   db.prepare('INSERT INTO broadcasts (message, sent_by, sent_to, status) VALUES (?, ?, ?, ?)')
-    .run(message, req.admin.name, sentCount, 'sent');
+    .run(escapeHtml(message), req.admin.name, sentCount, 'sent');
 
   res.json({ success: true, sentCount, total: consumers.length, results });
 });
